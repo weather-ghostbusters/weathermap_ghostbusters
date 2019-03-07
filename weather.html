@@ -43,6 +43,8 @@
 
     $(document).ready(function () {
 
+
+
         mapboxgl.accessToken = mapBoxKey;
 
         var map = new mapboxgl.Map({
@@ -52,6 +54,9 @@
 
         });
 
+
+        //Sets center of map at SA,TX
+
         geocode("San Antonio, Texas", mapBoxKey).then(function(data){
             map.setCenter(data);
             var marker = new mapboxgl.Marker({
@@ -59,6 +64,48 @@
             })
                 .setLngLat(data)
                 .addTo(map);
+            var darkSkyUrl = "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/" + darkSkyKey + "/29.4241,-98.4936"
+
+            //Sets SA,TX as default
+
+            $.ajax(darkSkyUrl).done(function (data) {
+                reverseGeocode({lng: -98.4936, lat: 29.4241}, mapBoxKey).then(function(results){
+                    console.log(results);
+                    results = results.split(",");
+                    results = results.slice(0,2);
+                    results = results.join(",")
+                    console.log(typeof results)
+                    $("h1").html(results)
+                })
+                console.log(data)
+                console.log(data.daily.data[1].humidity)
+                console.log(data.daily.data[3])
+
+                var dayOne = "<p><strong>" + data.daily.data[0].temperatureHigh + "° " + "/ " + data.daily.data[0].apparentTemperatureLow + "°"+ "</strong></p>"
+                    dayOne += "<p>"+ "<strong>Clouds: </strong>" + data.daily.data[0].summary + "</p>"
+                    dayOne += "<p>" + "<strong>Humidity: </strong>"  + data.daily.data[0].humidity +"</p>"
+                    dayOne += "<p>" + "<strong>Wind: </strong>" + data.daily.data[0].windSpeed +"</p>"
+                    dayOne += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[0].pressure +"</p>"
+                    $("#dayOne").html(dayOne)
+
+                var dayTwo = "<p><strong>" + data.daily.data[1].temperatureHigh + "° " + "/ " + data.daily.data[1].apparentTemperatureLow + "°"+ "</strong></p>"
+                dayTwo += "<p>"+ "<strong>Clouds: </strong>" + data.daily.data[1].summary + "</p>"
+                dayTwo += "<p>" + "<strong>Humidity: </strong>"  + data.daily.data[1].humidity +"</p>"
+                dayTwo += "<p>" + "<strong>Wind: </strong>" + data.daily.data[1].windSpeed +"</p>"
+                dayTwo += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[1].pressure +"</p>"
+                $("#dayTwo").html(dayTwo)
+
+                var dayThree = "<p><strong>" + data.daily.data[2].temperatureHigh + "° " + "/ " + data.daily.data[2].apparentTemperatureLow + "°"+ "</strong></p>"
+                dayThree += "<p>"+ "<strong>Clouds: </strong>" + data.daily.data[2].summary + "</p>"
+                dayThree += "<p>" + "<strong>Humidity: </strong>"  + data.daily.data[2].humidity +"</p>"
+                dayThree += "<p>" + "<strong>Wind: </strong>" + data.daily.data[2].windSpeed +"</p>"
+                dayThree += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[2].pressure +"</p>"
+                $("#dayThree").html(dayThree)
+
+            })
+
+            //Draggable marker
+
             function onDragEnd() {
 
                 var lngLat = marker.getLngLat();
