@@ -25,6 +25,8 @@
         .box {
             border: 1px solid dimgrey;
             background-color: rgb(242,242,242);
+            width: 20%;
+
         }
 
         body {
@@ -40,22 +42,14 @@
 <h1>Weather Application</h1>
 <h2> </h2>
 <div id="container" class="mx-auto">
-    <div class="row mb-5">
 
-        <div id="dayOne" class="box col ml-5"></div>
-        <div id="dayTwo" class="box col"></div>
-        <div id="dayThree" class="box col mr-5"></div>
-    </div>
+        <div id="test" class="d-flex flex-row ml-5 mb-5"></div>
 
     <div class="row ml-4 mr-4">
 <div id='map' style='width: 100%; height: 400px;'></div>
     </div>
 
 </div>
-
-
-<div id='coordinates' class='coordinates'></div>
-
 
 <script
         src="http://code.jquery.com/jquery-3.3.1.min.js"
@@ -72,54 +66,50 @@
 
 <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
 <script src="mapbox-geocoder-utils.js"></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v3.1.4/mapbox-gl-geocoder.min.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v3.1.4/mapbox-gl-geocoder.css' type='text/css' />
 <script src="keys.js"></script>
 
+
 <script>
-
-    $(document).ready(function () {
-
-
-        var conditions =
-            [
-                {
-                 condition: 'cloudy-day', icon:
-                },
-                {
-                    condition: 'clear-night', icon:
-                },
-                {
-                    condition: 'rain', icon:
-                },
-                {
-                    condition: 'snow', icon:
-                },
-                {
-                    condition: 'snow', icon:
-                },
-                {
-                    condition: 'sleet', icon:
-                },
-                {
-                    condition: 'wind', icon:
-                },
-                {
-                    condition: 'fog', icon:
-                },
-                {
-                    condition: 'cloudy', icon:
-                },
-                {
-                    condition: 'partly-cloudy-day', icon:
-                },
-                {
-                    condition: 'partly-cloudy-night', icon:
+    function boxMaker(data, maxday){
+        console.log(data);
+        var html = "";
+        var img;
+        for(var i = 0; i < maxday; i++){
+            for(var j = 0; j < conditions.length; j++){
+                if(data.daily.data[i].icon === conditions[j].condition){
+                    img = "<img alt='icon' src="+ conditions[j].icon + "/>"
                 }
+            }
+            html +="<div class='box'><p><strong>" + data.daily.data[i].temperatureHigh + "° " + "/ " + data.daily.data[i].apparentTemperatureLow + "°" + "</strong></p>"
+            html += img;
+            html += "<p>" + "<strong>Clouds: </strong>" + data.daily.data[i].summary + "</p>"
+            html += "<p>" + "<strong>Humidity: </strong>" + data.daily.data[i].humidity + "</p>"
+            html += "<p>" + "<strong>Wind: </strong>" + data.daily.data[i].windSpeed + "</p>"
+            html += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[i].pressure + "</p></div>"
+        }
+        $("#test").html(html)
+    }
+
+    var conditions =
+        [
+            {condition: 'cloudy-day', icon:"climacons-master/SVG/Cloud.svg"},
+            {condition: 'clear-night', icon: "climacons-master/SVG/Moon.svg"},
+            {condition: 'rain', icon: "climacons-master/SVG/Cloud-Rain.svg"},
+            {condition: 'snow', icon:"climacons-master/SVG/Cloud-Snow.svg"},
+            {condition: 'sleet', icon: "climacons-master/SVG/Cloud-Snow.svg"},
+            {condition: 'wind', icon: "climacons-master/SVG/Cloud-Wind.svg"},
+            {condition: 'fog', icon: "climacons-master/SVG/Cloud-Fog.svg"},
+            {condition: 'cloudy', icon: "climacons-master/SVG/Cloud.svg"},
+            {condition: 'partly-cloudy-day', icon: "climacons-master/SVG/Cloud-Sun.svg"},
+            {condition: 'partly-cloudy-night', icon: "climacons-master/SVG/Cloud-Moon.svg"}
 
         ];
 
+    $(document).ready(function () {
 
-
-
+        // sets Map
         mapboxgl.accessToken = mapBoxKey;
 
         var map = new mapboxgl.Map({
@@ -129,102 +119,65 @@
 
         });
 
-
         //Sets center of map at SA,TX
 
         geocode("San Antonio, Texas", mapBoxKey).then(function (data) {
+
+
+
             map.setCenter(data);
             var marker = new mapboxgl.Marker({
                 draggable: true
             })
                 .setLngLat(data)
                 .addTo(map);
+
+            map.addControl(new MapboxGeocoder({
+                accessToken: mapBoxKey
+            }));
+
+
+            //Sets SA,TX as default for darkSky
             var darkSkyUrl = "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/" + darkSkyKey + "/29.4241,-98.4936"
-
-            //Sets SA,TX as default
-
             $.ajax(darkSkyUrl).done(function (data) {
                 reverseGeocode({lng: -98.4936, lat: 29.4241}, mapBoxKey).then(function (results) {
                     console.log(results);
                     results = results.split(",");
                     results = results.slice(0, 2);
-                    results = results.join(",")
-                    console.log(typeof results)
+                    results = results.join(",");
                     $("h2").html(results)
                 })
-                console.log(data)
-                console.log(data.daily.data[1].humidity)
-                console.log(data.daily.data[3])
 
-                var dayOne = "<p><strong>" + data.daily.data[0].temperatureHigh + "° " + "/ " + data.daily.data[0].apparentTemperatureLow + "°" + "</strong></p>"
-                dayOne += "<p>" + "<strong>Clouds: </strong>" + data.daily.data[0].summary + "</p>"
-                dayOne += "<p>" + "<strong>Humidity: </strong>" + data.daily.data[0].humidity + "</p>"
-                dayOne += "<p>" + "<strong>Wind: </strong>" + data.daily.data[0].windSpeed + "</p>"
-                dayOne += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[0].pressure + "</p>"
-                $("#dayOne").html(dayOne)
-
-                var dayTwo = "<p><strong>" + data.daily.data[1].temperatureHigh + "° " + "/ " + data.daily.data[1].apparentTemperatureLow + "°" + "</strong></p>"
-                dayTwo += "<p>" + "<strong>Clouds: </strong>" + data.daily.data[1].summary + "</p>"
-                dayTwo += "<p>" + "<strong>Humidity: </strong>" + data.daily.data[1].humidity + "</p>"
-                dayTwo += "<p>" + "<strong>Wind: </strong>" + data.daily.data[1].windSpeed + "</p>"
-                dayTwo += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[1].pressure + "</p>"
-                $("#dayTwo").html(dayTwo)
-
-                var dayThree = "<p><strong>" + data.daily.data[2].temperatureHigh + "° " + "/ " + data.daily.data[2].apparentTemperatureLow + "°" + "</strong></p>"
-                dayThree += "<p>" + "<strong>Clouds: </strong>" + data.daily.data[2].summary + "</p>"
-                dayThree += "<p>" + "<strong>Humidity: </strong>" + data.daily.data[2].humidity + "</p>"
-                dayThree += "<p>" + "<strong>Wind: </strong>" + data.daily.data[2].windSpeed + "</p>"
-                dayThree += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[2].pressure + "</p>"
-                $("#dayThree").html(dayThree)
+                boxMaker(data, 5)
 
             })
 
-            //Draggable marker
+            //Draggable marker function
 
             function onDragEnd() {
 
                 var lngLat = marker.getLngLat();
-                // coordinates.style.display = 'block';
-                // coordinates.innerHTML = 'Longitude: ' + lngLat.lng + '<br />Latitude: ' + lngLat.lat;
+
+                //using marker latitude and longitude to add on to out URL
                 var darkSkyUrl = "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/" + darkSkyKey + "/" + lngLat.lat + "," + lngLat.lng + ""
                 $.ajax(darkSkyUrl).done(function (data) {
+                    // sets h2 with name of Current city
                     reverseGeocode({lng: lngLat.lng, lat: lngLat.lat}, mapBoxKey).then(function (results) {
                         console.log(results);
                         results = results.split(",");
                         results = results.slice(0, 2);
                         results = results.join(",")
-                        console.log(typeof results)
                         $("h2").html(results)
                     })
-                    console.log(data)
-                    console.log(data.daily.data[1].humidity)
-                    console.log(data.daily.data[3])
 
-                    var dayOne = "<p><strong>" + data.daily.data[0].temperatureHigh + "° " + "/ " + data.daily.data[0].apparentTemperatureLow + "°" + "</strong></p>"
-                    dayOne += "<p>" + "<strong>Clouds: </strong>" + data.daily.data[0].summary + "</p>"
-                    dayOne += "<p>" + "<strong>Humidity: </strong>" + data.daily.data[0].humidity + "</p>"
-                    dayOne += "<p>" + "<strong>Wind: </strong>" + data.daily.data[0].windSpeed + "</p>"
-                    dayOne += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[0].pressure + "</p>"
-                    $("#dayOne").html(dayOne)
+                    //boxes for new information
+                    boxMaker(data, 5);
 
-                    var dayTwo = "<p><strong>" + data.daily.data[1].temperatureHigh + "° " + "/ " + data.daily.data[1].apparentTemperatureLow + "°" + "</strong></p>"
-                    dayTwo += "<p>" + "<strong>Clouds: </strong>" + data.daily.data[1].summary + "</p>"
-                    dayTwo += "<p>" + "<strong>Humidity: </strong>" + data.daily.data[1].humidity + "</p>"
-                    dayTwo += "<p>" + "<strong>Wind: </strong>" + data.daily.data[1].windSpeed + "</p>"
-                    dayTwo += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[1].pressure + "</p>"
-                    $("#dayTwo").html(dayTwo)
-
-                    var dayThree = "<p><strong>" + data.daily.data[2].temperatureHigh + "° " + "/ " + data.daily.data[2].apparentTemperatureLow + "°" + "</strong></p>"
-                    dayThree += "<p>" + "<strong>Clouds: </strong>" + data.daily.data[2].summary + "</p>"
-                    dayThree += "<p>" + "<strong>Humidity: </strong>" + data.daily.data[2].humidity + "</p>"
-                    dayThree += "<p>" + "<strong>Wind: </strong>" + data.daily.data[2].windSpeed + "</p>"
-                    dayThree += "<p>" + "<strong>Pressure: </strong>" + data.daily.data[2].pressure + "</p>"
-                    $("#dayThree").html(dayThree)
 
                 })
 
             }
-
+            //"event listener" for marker
             marker.on('dragend', onDragEnd);
 
         })
